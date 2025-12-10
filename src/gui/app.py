@@ -4,8 +4,9 @@ import threading
 import os
 import sys
 from pathlib import Path
+import hashlib
 
-# Ajouter le chemin pour les imports
+# Pfad für Imports hinzufügen
 current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
@@ -13,67 +14,69 @@ if current_dir not in sys.path:
 try:
     from core.crypto_manager import CryptoManager
     from core.file_handler import FileHandler
+    from core.key_manager import KeyManager
 except ImportError as e:
-    print(f"❌ Erreur d'importation: {e}")
+    print(f"❌ Importfehler: {e}")
     sys.exit(1)
 
 class CryptoFileApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("🔐 CryptoFile - Chiffrement Simple et Sécurisé")
+        self.root.title("🔐 CryptoFile - Einfache und sichere Verschlüsselung")
         self.root.geometry("700x600")
         self.root.minsize(600, 500)
         
-        # Variables d'instance
+        # Instanzvariablen
         self.current_file = None
         self.current_key_file = None
         self.use_key_var = tk.BooleanVar(value=False)
         
         self.crypto_manager = CryptoManager()
+        self.key_manager = KeyManager()
         self.setup_ui()
     
     def setup_ui(self):
-        # Style moderne
+        # Modernes Design
         self.setup_styles()
         
-        # Frame principale avec scrollbar
+        # Hauptframe mit Scrollbar
         main_frame = ttk.Frame(self.root, padding="15")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        # Configuration du grid pour le redimensionnement
+        # Grid-Konfiguration für Anpassung
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         main_frame.columnconfigure(0, weight=1)
         main_frame.rowconfigure(5, weight=1)
         
-        # En-tête
+        # Header
         self.create_header(main_frame)
         
-        # Sélection de fichier
+        # Dateiauswahl
         self.create_file_section(main_frame)
         
-        # Section clé (optionnelle)
+        # Schlüsselbereich (optional)
         self.create_key_section(main_frame)
         
-        # Mot de passe
+        # Passwort
         self.create_password_section(main_frame)
         
-        # Actions
+        # Aktionen
         self.create_action_section(main_frame)
         
-        # Progress bar
+        # Fortschrittsbalken
         self.create_progress_section(main_frame)
         
-        # Journal d'activité
+        # Aktivitätsprotokoll
         self.create_log_section(main_frame)
         
-        # Pied de page
+        # Footer
         self.create_footer(main_frame)
     
     def setup_styles(self):
         style = ttk.Style()
         
-        # Styles personnalisés
+        # Benutzerdefinierte Stile
         style.configure('Title.TLabel', font=('Arial', 18, 'bold'))
         style.configure('Subtitle.TLabel', font=('Arial', 11))
         style.configure('Action.TButton', font=('Arial', 12, 'bold'))
@@ -81,7 +84,7 @@ class CryptoFileApp:
         style.configure('Error.TLabel', foreground='red')
     
     def create_header(self, parent):
-        """Crée l'en-tête de l'application"""
+        """Erstellt den Anwendungsheader"""
         header_frame = ttk.Frame(parent)
         header_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 20))
         header_frame.columnconfigure(0, weight=1)
@@ -90,41 +93,41 @@ class CryptoFileApp:
         title.grid(row=0, column=0, pady=(0, 5))
         
         subtitle = ttk.Label(header_frame, 
-                           text="Chiffrement et déchiffrement sécurisé de fichiers - Simple et Rapide",
+                           text="Sichere Dateiverschlüsselung und -entschlüsselung - Einfach und Schnell",
                            style='Subtitle.TLabel')
         subtitle.grid(row=1, column=0)
     
     def create_file_section(self, parent):
-        """Section de sélection de fichier"""
-        file_frame = ttk.LabelFrame(parent, text="📁 1. Sélection du fichier", padding="12")
+        """Dateiauswahlbereich"""
+        file_frame = ttk.LabelFrame(parent, text="📁 1. Dateiauswahl", padding="12")
         file_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 12))
         file_frame.columnconfigure(0, weight=1)
         
-        # Affichage du fichier sélectionné
-        self.file_label = ttk.Label(file_frame, text="Aucun fichier sélectionné")
+        # Anzeige der ausgewählten Datei
+        self.file_label = ttk.Label(file_frame, text="Keine Datei ausgewählt")
         self.file_label.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 8))
         
-        # Boutons
+        # Buttons
         btn_frame = ttk.Frame(file_frame)
         btn_frame.grid(row=1, column=0, sticky=(tk.W, tk.E))
         
-        self.browse_btn = ttk.Button(btn_frame, text="Parcourir...", command=self.select_file)
+        self.browse_btn = ttk.Button(btn_frame, text="Durchsuchen...", command=self.select_file)
         self.browse_btn.grid(row=0, column=0, padx=(0, 10))
         
-        self.clear_btn = ttk.Button(btn_frame, text="Effacer", command=self.clear_file, state=tk.DISABLED)
+        self.clear_btn = ttk.Button(btn_frame, text="Löschen", command=self.clear_file, state=tk.DISABLED)
         self.clear_btn.grid(row=0, column=1)
         
-        # Info fichier
+        # Dateiinfo
         self.file_info = ttk.Label(file_frame, text="", style='Subtitle.TLabel')
         self.file_info.grid(row=2, column=0, sticky=tk.W)
     
     def create_key_section(self, parent):
-        """Section de gestion des clés (optionnelle)"""
-        key_frame = ttk.LabelFrame(parent, text="🗝️ 2. Clé externe (optionnel)", padding="10")
+        """Schlüsselverwaltung (optional)"""
+        key_frame = ttk.LabelFrame(parent, text="🗝️ 2. Externer Schlüssel (optional)", padding="10")
         key_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=(0, 12))
         key_frame.columnconfigure(0, weight=1)
         
-        key_check = ttk.Checkbutton(key_frame, text="Utiliser un fichier de clé", 
+        key_check = ttk.Checkbutton(key_frame, text="Schlüsseldatei verwenden", 
                                    variable=self.use_key_var, command=self.toggle_key_file)
         key_check.grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
         
@@ -132,63 +135,67 @@ class CryptoFileApp:
         self.key_file_frame.grid(row=1, column=0, sticky=(tk.W, tk.E))
         self.key_file_frame.columnconfigure(0, weight=1)
         
-        self.key_file_label = ttk.Label(self.key_file_frame, text="Aucun fichier de clé sélectionné")
+        self.key_file_label = ttk.Label(self.key_file_frame, text="Keine Schlüsseldatei ausgewählt")
         self.key_file_label.grid(row=0, column=0, sticky=(tk.W, tk.E))
         
-        self.key_browse_btn = ttk.Button(self.key_file_frame, text="Parcourir clé...", 
+        self.key_browse_btn = ttk.Button(self.key_file_frame, text="Schlüssel durchsuchen...", 
                                        command=self.select_key_file, state=tk.DISABLED)
         self.key_browse_btn.grid(row=0, column=1, padx=(10, 0))
         
-        # Cacher initialement
+        self.generate_key_btn = ttk.Button(key_frame, text="Neuen Schlüssel generieren", 
+                                         command=self.generate_key_dialog)
+        self.generate_key_btn.grid(row=2, column=0, sticky=tk.W, pady=(10, 0))
+        
+        # Initial ausblenden
         self.key_file_frame.grid_remove()
     
     def create_password_section(self, parent):
-        """Section de saisie du mot de passe"""
-        password_frame = ttk.LabelFrame(parent, text="🔑 3. Mot de passe", padding="12")
+        """Passworteingabebereich"""
+        password_frame = ttk.LabelFrame(parent, text="🔑 3. Passwort", padding="12")
         password_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(0, 12))
         password_frame.columnconfigure(1, weight=1)
         
-        # Mot de passe
-        ttk.Label(password_frame, text="Mot de passe:").grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
+        # Passwort
+        ttk.Label(password_frame, text="Passwort:").grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
         self.password_entry = ttk.Entry(password_frame, show="•", width=30)
         self.password_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(0, 10))
         
-        # Confirmation
-        ttk.Label(password_frame, text="Confirmation:").grid(row=1, column=0, sticky=tk.W, padx=(0, 10), pady=(8, 0))
+        # Bestätigung
+        ttk.Label(password_frame, text="Bestätigung:").grid(row=1, column=0, sticky=tk.W, padx=(0, 10), pady=(8, 0))
         self.confirm_entry = ttk.Entry(password_frame, show="•", width=30)
         self.confirm_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=(0, 10), pady=(8, 0))
         
-        # Indicateur de force du mot de passe
+        # Passwortstärke-Anzeige
         self.password_strength = ttk.Label(password_frame, text="")
         self.password_strength.grid(row=2, column=1, sticky=tk.W, pady=(5, 0))
         
-        # Lier les événements de saisie
+        # Tastatureingabe-Ereignisse binden
         self.password_entry.bind('<KeyRelease>', self.check_password_strength)
         self.confirm_entry.bind('<KeyRelease>', self.check_password_match)
     
     def create_action_section(self, parent):
-        """Section des boutons d'action"""
-        action_frame = ttk.LabelFrame(parent, text="⚡ 4. Action", padding="12")
+        """Aktionsbuttons"""
+        action_frame = ttk.LabelFrame(parent, text="⚡ 4. Aktion", padding="12")
         action_frame.grid(row=4, column=0, sticky=(tk.W, tk.E), pady=(0, 12))
         
-        # Boutons centrés
+        # Zentrierte Buttons
         btn_container = ttk.Frame(action_frame)
         btn_container.grid(row=0, column=0)
         
-        self.encrypt_btn = ttk.Button(btn_container, text="🔒 CHIFFRER", 
+        self.encrypt_btn = ttk.Button(btn_container, text="🔒 VERSCHLÜSSELN", 
                                      command=self.encrypt_file, 
                                      state=tk.DISABLED,
                                      style='Action.TButton')
         self.encrypt_btn.grid(row=0, column=0, padx=(0, 20))
         
-        self.decrypt_btn = ttk.Button(btn_container, text="🔓 DÉCHIFFRER", 
+        self.decrypt_btn = ttk.Button(btn_container, text="🔓 ENTSCHLÜSSELN", 
                                      command=self.decrypt_file, 
                                      state=tk.DISABLED,
                                      style='Action.TButton')
         self.decrypt_btn.grid(row=0, column=1)
     
     def create_progress_section(self, parent):
-        """Section de progression"""
+        """Fortschrittsbereich"""
         self.progress_frame = ttk.Frame(parent)
         self.progress_frame.grid(row=5, column=0, sticky=(tk.W, tk.E), pady=(0, 12))
         self.progress_frame.columnconfigure(0, weight=1)
@@ -199,50 +206,50 @@ class CryptoFileApp:
         self.progress_label = ttk.Label(self.progress_frame, text="")
         self.progress_label.grid(row=1, column=0, sticky=tk.W, pady=(5, 0))
         
-        # Cacher initialement
+        # Initial ausblenden
         self.hide_progress()
     
     def create_log_section(self, parent):
-        """Section du journal d'activité"""
-        log_frame = ttk.LabelFrame(parent, text="📋 Journal d'activité", padding="12")
+        """Aktivitätsprotokoll"""
+        log_frame = ttk.LabelFrame(parent, text="📋 Aktivitätsprotokoll", padding="12")
         log_frame.grid(row=6, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 12))
         log_frame.columnconfigure(0, weight=1)
         log_frame.rowconfigure(0, weight=1)
         
-        # Zone de texte avec scrollbar
+        # Textbereich mit Scrollbar
         self.log_text = scrolledtext.ScrolledText(log_frame, height=8, wrap=tk.WORD)
         self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        # Boutons de contrôle du journal
+        # Protokollsteuerung
         log_controls = ttk.Frame(log_frame)
         log_controls.grid(row=1, column=0, sticky=tk.W, pady=(5, 0))
         
-        ttk.Button(log_controls, text="Effacer le journal", 
+        ttk.Button(log_controls, text="Protokoll löschen", 
                   command=self.clear_log).grid(row=0, column=0, padx=(0, 10))
         
-        ttk.Button(log_controls, text="Copier le journal", 
+        ttk.Button(log_controls, text="Protokoll kopieren", 
                   command=self.copy_log).grid(row=0, column=1)
     
     def create_footer(self, parent):
-        """Pied de page"""
+        """Footer"""
         footer_frame = ttk.Frame(parent)
         footer_frame.grid(row=7, column=0, sticky=(tk.W, tk.E))
         footer_frame.columnconfigure(0, weight=1)
         
-        footer_text = "✅ CryptoFile - Sécurisez vos fichiers facilement"
+        footer_text = "✅ CryptoFile - Sichern Sie Ihre Dateien einfach"
         footer = ttk.Label(footer_frame, text=footer_text, style='Subtitle.TLabel')
         footer.grid(row=0, column=0)
     
     def select_file(self):
-        """Sélectionne un fichier"""
+        """Wählt eine Datei aus"""
         filename = filedialog.askopenfilename(
-            title="Sélectionnez un fichier à chiffrer/déchiffrer",
+            title="Datei zum Verschlüsseln/Entschlüsseln wählen",
             filetypes=[
-                ("Tous les fichiers", "*.*"),
-                ("Documents PDF", "*.pdf"),
-                ("Images", "*.jpg *.jpeg *.png *.gif"),
-                ("Documents", "*.doc *.docx *.txt"),
-                ("Archives", "*.zip *.rar *.7z")
+                ("Alle Dateien", "*.*"),
+                ("PDF-Dokumente", "*.pdf"),
+                ("Bilder", "*.jpg *.jpeg *.png *.gif"),
+                ("Dokumente", "*.doc *.docx *.txt"),
+                ("Archive", "*.zip *.rar *.7z")
             ]
         )
         
@@ -252,239 +259,375 @@ class CryptoFileApp:
             self.file_label.config(text=file_path.name)
             self.clear_btn.config(state=tk.NORMAL)
             
-            # Afficher les informations du fichier
+            # Dateiinformationen anzeigen
             file_size = file_path.stat().st_size
             size_text = self.format_file_size(file_size)
-            self.file_info.config(text=f"Taille: {size_text}")
+            self.file_info.config(text=f"Größe: {size_text}")
             
-            # Déterminer l'action possible
+            # Mögliche Aktion bestimmen
             if filename.endswith('.encrypted'):
                 self.encrypt_btn.config(state=tk.DISABLED)
                 self.decrypt_btn.config(state=tk.NORMAL)
-                self.log("📁 Fichier chiffré sélectionné - Prêt pour le déchiffrement")
+                self.log("📁 Verschlüsselte Datei ausgewählt - Bereit zum Entschlüsseln")
             else:
                 self.encrypt_btn.config(state=tk.NORMAL)
                 self.decrypt_btn.config(state=tk.DISABLED)
-                self.log("📁 Fichier normal sélectionné - Prêt pour le chiffrement")
+                self.log("📁 Normale Datei ausgewählt - Bereit zum Verschlüsseln")
     
     def clear_file(self):
-        """Efface la sélection de fichier"""
+        """Löscht die Dateiauswahl"""
         self.current_file = None
-        self.file_label.config(text="Aucun fichier sélectionné")
+        self.file_label.config(text="Keine Datei ausgewählt")
         self.file_info.config(text="")
         self.clear_btn.config(state=tk.DISABLED)
         self.encrypt_btn.config(state=tk.DISABLED)
         self.decrypt_btn.config(state=tk.DISABLED)
-        self.log("🗑️ Sélection de fichier effacée")
+        self.log("🗑️ Dateiauswahl gelöscht")
     
     def toggle_key_file(self):
-        """Active/désactive la sélection de fichier de clé"""
+        """Aktiviert/Deaktiviert Schlüsseldateiauswahl"""
         if self.use_key_var.get():
             self.key_file_frame.grid()
             self.key_browse_btn.config(state=tk.NORMAL)
-            self.log("🗝️  Mode fichier de clé activé")
+            self.log("🗝️  Schlüsseldatei-Modus aktiviert")
         else:
             self.key_file_frame.grid_remove()
             self.key_browse_btn.config(state=tk.DISABLED)
             self.current_key_file = None
-            self.key_file_label.config(text="Aucun fichier de clé sélectionné")
-            self.log("🗝️  Mode fichier de clé désactivé")
+            self.key_file_label.config(text="Keine Schlüsseldatei ausgewählt")
+            self.log("🗝️  Schlüsseldatei-Modus deaktiviert")
     
     def select_key_file(self):
-        """Sélectionne un fichier de clé"""
+        """Wählt eine Schlüsseldatei aus"""
         filename = filedialog.askopenfilename(
-            title="Sélectionnez un fichier de clé",
-            filetypes=[("Fichiers de clé", "*.key"), ("Tous les fichiers", "*.*")]
+            title="Schlüsseldatei wählen",
+            filetypes=[("Schlüsseldateien", "*.key"), ("Alle Dateien", "*.*")]
         )
         
         if filename:
             self.current_key_file = filename
             self.key_file_label.config(text=Path(filename).name)
-            self.log(f"🗝️  Fichier de clé sélectionné: {Path(filename).name}")
+            self.log(f"🗝️  Schlüsseldatei ausgewählt: {Path(filename).name}")
+    
+    def generate_key_dialog(self):
+        """Dialog zum Generieren eines neuen Schlüssels"""
+        dialog = tk.Toplevel(self.root)
+        dialog.title("🔑 Neuen Schlüssel generieren")
+        dialog.geometry("400x300")
+        dialog.transient(self.root)
+        dialog.grab_set()
+        
+        # Hauptframe
+        main_frame = ttk.Frame(dialog, padding="20")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        ttk.Label(main_frame, text="Neuen Schlüssel generieren", font=('Arial', 14, 'bold')).grid(row=0, column=0, pady=(0, 15))
+        
+        # Passwort
+        ttk.Label(main_frame, text="Passwort zum Schutz des Schlüssels:").grid(row=1, column=0, sticky=tk.W)
+        password_entry = ttk.Entry(main_frame, show="•", width=30)
+        password_entry.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+        
+        ttk.Label(main_frame, text="Bestätigung:").grid(row=3, column=0, sticky=tk.W)
+        confirm_entry = ttk.Entry(main_frame, show="•", width=30)
+        confirm_entry.grid(row=4, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
+        
+        # Ausgabedatei
+        ttk.Label(main_frame, text="Ausgabedatei:").grid(row=5, column=0, sticky=tk.W)
+        file_frame = ttk.Frame(main_frame)
+        file_frame.grid(row=6, column=0, sticky=(tk.W, tk.E), pady=(0, 20))
+        
+        output_var = tk.StringVar(value="mein_schluessel.key")
+        output_entry = ttk.Entry(file_frame, textvariable=output_var, width=25)
+        output_entry.grid(row=0, column=0, sticky=(tk.W, tk.E))
+        
+        def browse_output():
+            filename = filedialog.asksaveasfilename(
+                title="Schlüssel speichern unter",
+                defaultextension=".key",
+                filetypes=[("Schlüsseldateien", "*.key"), ("Alle Dateien", "*.*")]
+            )
+            if filename:
+                output_var.set(filename)
+        
+        ttk.Button(file_frame, text="Durchsuchen...", command=browse_output).grid(row=0, column=1, padx=(10, 0))
+        
+        # Buttons
+        btn_frame = ttk.Frame(main_frame)
+        btn_frame.grid(row=7, column=0, sticky=tk.E)
+        
+        def generate():
+            password = password_entry.get()
+            confirm = confirm_entry.get()
+            output_file = output_var.get()
+            
+            if not password or not confirm:
+                messagebox.showerror("Fehler", "Bitte geben Sie ein Passwort ein")
+                return
+            
+            if password != confirm:
+                messagebox.showerror("Fehler", "Passwörter stimmen nicht überein")
+                return
+            
+            if len(password) < 4:
+                messagebox.showerror("Fehler", "Passwort muss mindestens 4 Zeichen lang sein")
+                return
+            
+            if not output_file:
+                messagebox.showerror("Fehler", "Bitte geben Sie eine Ausgabedatei an")
+                return
+            
+            try:
+                # Schlüssel generieren
+                key = self.key_manager.generate_secure_key()
+                self.key_manager.save_key_to_file(key, output_file, password)
+                
+                self.log(f"🗝️  Neuer Schlüssel generiert: {output_file}")
+                messagebox.showinfo("Erfolg", f"Schlüssel erfolgreich generiert!\n\nDatei: {output_file}")
+                dialog.destroy()
+                
+            except Exception as e:
+                messagebox.showerror("Fehler", f"Fehler bei der Generierung: {str(e)}")
+        
+        def cancel():
+            dialog.destroy()
+        
+        ttk.Button(btn_frame, text="Generieren", command=generate).grid(row=0, column=0, padx=(0, 10))
+        ttk.Button(btn_frame, text="Abbrechen", command=cancel).grid(row=0, column=1)
+        
+        # Grid-Konfiguration
+        main_frame.columnconfigure(0, weight=1)
+        file_frame.columnconfigure(0, weight=1)
     
     def check_password_strength(self, event=None):
-        """Vérifie la force du mot de passe"""
+        """Überprüft die Passwortstärke"""
         password = self.password_entry.get()
         
         if len(password) == 0:
             self.password_strength.config(text="")
         elif len(password) < 4:
-            self.password_strength.config(text="❌ Trop court (min 4 caractères)", style='Error.TLabel')
+            self.password_strength.config(text="❌ Zu kurz (min. 4 Zeichen)", style='Error.TLabel')
         elif len(password) < 8:
-            self.password_strength.config(text="⚠️  Faible", style='Subtitle.TLabel')
+            self.password_strength.config(text="⚠️  Schwach", style='Subtitle.TLabel')
         else:
             has_upper = any(c.isupper() for c in password)
             has_lower = any(c.islower() for c in password)
             has_digit = any(c.isdigit() for c in password)
             
             if has_upper and has_lower and has_digit:
-                self.password_strength.config(text="✅ Fort", style='Success.TLabel')
+                self.password_strength.config(text="✅ Stark", style='Success.TLabel')
             else:
-                self.password_strength.config(text="⚠️  Moyen", style='Subtitle.TLabel')
+                self.password_strength.config(text="⚠️  Mittel", style='Subtitle.TLabel')
     
     def check_password_match(self, event=None):
-        """Vérifie si les mots de passe correspondent"""
+        """Überprüft Passwortübereinstimmung"""
         password = self.password_entry.get()
         confirm = self.confirm_entry.get()
         
         if confirm and password != confirm:
-            self.password_strength.config(text="❌ Les mots de passe ne correspondent pas", style='Error.TLabel')
+            self.password_strength.config(text="❌ Passwörter stimmen nicht überein", style='Error.TLabel')
         elif confirm and password == confirm:
-            self.password_strength.config(text="✅ Mots de passe identiques", style='Success.TLabel')
+            self.password_strength.config(text="✅ Passwörter übereinstimmend", style='Success.TLabel')
     
     def encrypt_file(self):
-        """Chiffre le fichier sélectionné"""
+        """Verschlüsselt die ausgewählte Datei"""
         if not self.validate_inputs():
             return
         
         def encrypt_thread():
             try:
-                self.show_progress("Chiffrement en cours...")
+                self.show_progress("Verschlüsselung läuft...")
                 
                 input_path = self.current_file
                 output_path = input_path + '.encrypted'
                 
-                key_file = self.current_key_file if self.use_key_var.get() else None
+                password = self.password_entry.get()
                 
-                self.log(f"🔒 Début du chiffrement: {Path(input_path).name}")
-                if key_file:
-                    self.log(f"🗝️  Utilisation du fichier de clé: {Path(key_file).name}")
+                self.log(f"🔒 Beginn der Verschlüsselung: {Path(input_path).name}")
                 
-                success = self.crypto_manager.encrypt_file_v2(
-                    input_path, output_path, self.password_entry.get(), key_file
-                )
+                if self.use_key_var.get() and self.current_key_file:
+                    # Externer Schlüsselmodus
+                    self.log(f"🗝️  Verwende Schlüsseldatei: {Path(self.current_key_file).name}")
+                    
+                    # Schlüssel laden
+                    encryption_key = self.key_manager.load_key_from_file(self.current_key_file, password)
+                    
+                    # Mit Schlüssel verschlüsseln
+                    success = self.crypto_manager.encrypt_with_key(input_path, output_path, encryption_key)
+                    
+                else:
+                    # Passwortmodus
+                    self.log("🔑 Passwortmodus (Schlüsselableitung)")
+                    success = self.crypto_manager.encrypt_file_v2(input_path, output_path, password)
                 
                 if success:
                     output_size = Path(output_path).stat().st_size
-                    self.log(f"✅ Chiffrement réussi! Taille: {self.format_file_size(output_size)}")
-                    messagebox.showinfo("Succès", 
-                                      f"Fichier chiffré avec succès!\n\n"
-                                      f"📁 Fichier: {Path(output_path).name}\n"
-                                      f"📏 Taille: {self.format_file_size(output_size)}")
+                    mode = "mit externem Schlüssel" if (self.use_key_var.get() and self.current_key_file) else "mit Passwort"
+                    self.log(f"✅ Verschlüsselung erfolgreich! ({mode})")
+                    self.log(f"📦 Größe: {self.format_file_size(output_size)}")
+                    
+                    messagebox.showinfo("Erfolg", 
+                                      f"Datei erfolgreich verschlüsselt!\n\n"
+                                      f"📁 Datei: {Path(output_path).name}\n"
+                                      f"📏 Größe: {self.format_file_size(output_size)}\n"
+                                      f"🔐 Modus: {mode}")
                 else:
-                    self.log("❌ Échec du chiffrement")
-                    messagebox.showerror("Erreur", "Le chiffrement a échoué. Vérifiez le fichier et réessayez.")
+                    self.log("❌ Verschlüsselung fehlgeschlagen")
+                    messagebox.showerror("Fehler", "Verschlüsselung fehlgeschlagen. Datei überprüfen und erneut versuchen.")
                     
             except Exception as e:
-                error_msg = f"Erreur lors du chiffrement: {str(e)}"
+                error_msg = f"Fehler bei der Verschlüsselung: {str(e)}"
                 self.log(f"💥 {error_msg}")
-                messagebox.showerror("Erreur", error_msg)
+                messagebox.showerror("Fehler", error_msg)
             finally:
                 self.hide_progress()
         
         threading.Thread(target=encrypt_thread, daemon=True).start()
     
     def decrypt_file(self):
-        """Déchiffre le fichier sélectionné"""
+        """Entschlüsselt die ausgewählte Datei"""
         if not self.validate_inputs():
             return
         
         def decrypt_thread():
             try:
-                self.show_progress("Déchiffrement en cours...")
+                self.show_progress("Entschlüsselung läuft...")
                 
                 input_path = self.current_file
-                key_file = self.current_key_file if self.use_key_var.get() else None
+                password = self.password_entry.get()
                 
                 if input_path.endswith('.encrypted'):
-                    output_path = input_path[:-10]  # Retire .encrypted
+                    output_path = input_path[:-10]  # Entfernt .encrypted
                 else:
                     output_path = input_path + '.decrypted'
                 
-                self.log(f"🔓 Début du déchiffrement: {Path(input_path).name}")
-                if key_file:
-                    self.log(f"🗝️  Utilisation du fichier de clé: {Path(key_file).name}")
+                self.log(f"🔓 Beginn der Entschlüsselung: {Path(input_path).name}")
                 
-                success = self.crypto_manager.decrypt_file_auto(
-                    input_path, output_path, self.password_entry.get(), key_file
-                )
+                # Dateiformat erkennen
+                format_type = self.crypto_manager.detect_file_format(input_path)
                 
-                if success:
-                    output_size = Path(output_path).stat().st_size
-                    self.log(f"✅ Déchiffrement réussi! Taille: {self.format_file_size(output_size)}")
-                    messagebox.showinfo("Succès", 
-                                      f"Fichier déchiffré avec succès!\n\n"
-                                      f"📁 Fichier: {Path(output_path).name}\n"
-                                      f"📏 Taille: {self.format_file_size(output_size)}")
+                success = False
+                
+                if format_type == 'key_encrypted':
+                    # Mit Schlüssel verschlüsselte Datei
+                    if self.use_key_var.get() and self.current_key_file:
+                        self.log(f"🗝️  KENC-Format erkannt - verwende Schlüsseldatei")
+                        
+                        # Schlüssel laden
+                        decryption_key = self.key_manager.load_key_from_file(self.current_key_file, password)
+                        
+                        # Mit Schlüssel entschlüsseln
+                        success = self.crypto_manager.decrypt_with_key(input_path, output_path, decryption_key)
+                        
+                        if not success:
+                            self.log("❌ Fehlgeschlagen - Falsches Passwort oder Schlüssel?")
+                    else:
+                        self.log("❌ Mit Schlüssel verschlüsselt - Bitte Schlüsseldatei wählen")
+                        messagebox.showerror("Fehler", 
+                                           "Diese Datei wurde mit einem Schlüssel verschlüsselt.\n\n"
+                                           "Bitte:\n"
+                                           "1. 'Schlüsseldatei verwenden' aktivieren\n"
+                                           "2. Richtige Schlüsseldatei wählen\n"
+                                           "3. Schlüsselpasswort eingeben")
+                        return
+                
+                elif format_type == 'password_encrypted':
+                    # Mit Passwort verschlüsselte Datei
+                    self.log("🔑 FENC-Format erkannt - Entschlüsselung mit Passwort")
+                    success = self.crypto_manager.decrypt_file_v2(input_path, output_path, password)
+                
                 else:
-                    self.log("❌ Échec du déchiffrement - Mauvais mot de passe ou clé?")
-                    messagebox.showerror("Erreur", 
-                                       "Le déchiffrement a échoué.\n\n"
-                                       "Raisons possibles:\n"
-                                       "• Mot de passe incorrect\n"
-                                       "• Clé incorrecte\n"
-                                       "• Fichier corrompu\n"
-                                       "• Format non supporté")
+                    # Unbekanntes Format, automatischer Versuch
+                    self.log("🔄 Unbekanntes Format - automatischer Versuch")
+                    success = self.crypto_manager.decrypt_file_auto(input_path, output_path, password)
+                
+                if success and os.path.exists(output_path):
+                    output_size = Path(output_path).stat().st_size
+                    self.log(f"✅ Entschlüsselung erfolgreich!")
+                    self.log(f"📦 Größe: {self.format_file_size(output_size)}")
+                    
+                    messagebox.showinfo("Erfolg", 
+                                      f"Datei erfolgreich entschlüsselt!\n\n"
+                                      f"📁 Datei: {Path(output_path).name}\n"
+                                      f"📏 Größe: {self.format_file_size(output_size)}")
+                else:
+                    self.log("❌ Entschlüsselung fehlgeschlagen")
+                    messagebox.showerror("Fehler", 
+                                       "Entschlüsselung fehlgeschlagen.\n\n"
+                                       "Mögliche Gründe:\n"
+                                       "• Falsches Passwort\n"
+                                       "• Falscher Schlüssel\n"
+                                       "• Beschädigte Datei\n"
+                                       "• Nicht unterstütztes Format")
                 
             except Exception as e:
-                error_msg = f"Erreur lors du déchiffrement: {str(e)}"
+                error_msg = f"Fehler bei der Entschlüsselung: {str(e)}"
                 self.log(f"💥 {error_msg}")
-                messagebox.showerror("Erreur", error_msg)
+                messagebox.showerror("Fehler", error_msg)
             finally:
                 self.hide_progress()
         
         threading.Thread(target=decrypt_thread, daemon=True).start()
     
     def validate_inputs(self):
-        """Valide les entrées utilisateur"""
+        """Validiert Benutzereingaben"""
         if not self.current_file:
-            messagebox.showwarning("Attention", "Veuillez sélectionner un fichier")
+            messagebox.showwarning("Hinweis", "Bitte wählen Sie eine Datei")
             return False
         
         password = self.password_entry.get()
         confirm = self.confirm_entry.get()
         
         if not password:
-            messagebox.showwarning("Attention", "Veuillez entrer un mot de passe")
+            messagebox.showwarning("Hinweis", "Bitte geben Sie ein Passwort ein")
             return False
         
         if password != confirm:
-            messagebox.showwarning("Attention", "Les mots de passe ne correspondent pas")
+            messagebox.showwarning("Hinweis", "Passwörter stimmen nicht überein")
             return False
         
         if len(password) < 4:
-            messagebox.showwarning("Attention", "Le mot de passe doit faire au moins 4 caractères")
+            messagebox.showwarning("Hinweis", "Passwort muss mindestens 4 Zeichen lang sein")
             return False
         
-        # Vérification du fichier de clé si activé
+        # Schlüsseldatei-Überprüfung wenn aktiviert
         if self.use_key_var.get() and not self.current_key_file:
-            messagebox.showwarning("Attention", "Veuillez sélectionner un fichier de clé")
+            messagebox.showwarning("Hinweis", "Bitte wählen Sie eine Schlüsseldatei")
             return False
         
         return True
     
     def show_progress(self, message):
-        """Affiche la barre de progression"""
+        """Zeigt Fortschrittsbalken"""
         self.progress_frame.grid()
         self.progress.start()
         self.progress_label.config(text=message)
     
     def hide_progress(self):
-        """Cache la barre de progression"""
+        """Versteckt Fortschrittsbalken"""
         self.progress.stop()
         self.progress_frame.grid_remove()
         self.progress_label.config(text="")
     
     def log(self, message):
-        """Ajoute un message au journal"""
+        """Fügt Nachricht zum Protokoll hinzu"""
         self.log_text.insert(tk.END, f"{message}\n")
         self.log_text.see(tk.END)
-        self.root.update()
     
     def clear_log(self):
-        """Efface le journal"""
+        """Löscht das Protokoll"""
         self.log_text.delete(1.0, tk.END)
-        self.log("🗑️ Journal effacé")
+        self.log("🗑️ Protokoll gelöscht")
     
     def copy_log(self):
-        """Copie le journal dans le presse-papier"""
+        """Kopiert Protokoll in Zwischenablage"""
         log_content = self.log_text.get(1.0, tk.END)
         self.root.clipboard_clear()
         self.root.clipboard_append(log_content)
-        self.log("📋 Journal copié dans le presse-papiers")
+        self.log("📋 Protokoll in Zwischenablage kopiert")
     
     def format_file_size(self, size_bytes):
-        """Formate la taille du fichier en unités lisibles"""
+        """Formatiert Dateigröße in lesbare Einheiten"""
         for unit in ['B', 'KB', 'MB', 'GB']:
             if size_bytes < 1024.0:
                 return f"{size_bytes:.1f} {unit}"
@@ -492,14 +635,13 @@ class CryptoFileApp:
         return f"{size_bytes:.1f} TB"
 
 def run_gui():
-    """Lance l'interface graphique"""
+    """Startet die grafische Oberfläche"""
     try:
         root = tk.Tk()
         app = CryptoFileApp(root)
         root.mainloop()
     except Exception as e:
-        print(f"❌ Erreur lors du lancement de l'interface: {e}")
-        input("Appuyez sur Entrée pour quitter...")
+        print(f"❌ Fehler beim Start der Oberfläche: {e}")
 
 if __name__ == "__main__":
     run_gui()

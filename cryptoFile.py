@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Lanceur universel pour CryptoFile
+Universal launcher for CryptoFile
 """
 
 import os
@@ -8,7 +8,7 @@ import sys
 import platform
 
 def can_run_gui():
-    """Vérifie si l'interface graphique peut être lancée"""
+    """Check if the graphical interface can be launched"""
     try:
         import tkinter
         return True
@@ -16,7 +16,7 @@ def can_run_gui():
         return False
 
 def setup_paths():
-    """Configure les chemins d'importation"""
+    """Configures import paths"""
     current_dir = os.path.dirname(os.path.abspath(__file__))
     src_dir = os.path.join(current_dir, 'src')
     
@@ -27,8 +27,8 @@ def setup_paths():
         sys.path.insert(0, current_dir)
 
 def main():
-    """Fonction principale"""
-    print("🔐 CryptoFile - Lancement...")
+    """Main function"""
+    print("🔐 CryptoFile - Launch...")
     
     # Configuration des chemins
     setup_paths()
@@ -38,8 +38,8 @@ def main():
         import cryptography
         import argon2
     except ImportError as e:
-        print(f"❌ Dépendances manquantes: {e}")
-        print("💡 Exécutez: python install.py")
+        print(f"❌ Missing dependencies: {e}")
+        print("💡 Run: python install.py")
         return
     
     # Arguments de ligne de commande
@@ -47,14 +47,14 @@ def main():
     
     # Mode ligne de commande forcé
     if '--cli' in args or '-c' in args:
-        print("💻 Mode ligne de commande")
+        print("💻 Command line mode")
         try:
             from main import cli
             cli()
         except ImportError as e:
-            print(f"❌ Impossible de charger l'interface CLI: {e}")
+            print(f"❌ Unable to load the CLI interface:{e}")
         return
-        """    
+    """    
     # Mode web
     if '--web' in args or '-w' in args:
         print("🌐 Lancement de l'interface web...")
@@ -64,29 +64,29 @@ def main():
         except ImportError as e:
             print(f"❌ Interface web non disponible: {e}")
         return
-        """    
+    """    
     # Mode graphique (par défaut si disponible)
     if can_run_gui():
-        print("🖥️  Mode interface graphique")
+        print("🖥️  GUI mode")
         try:
             from src.gui.app import run_gui
             run_gui()
         except ImportError as e:
-            print(f"❌ Interface graphique non disponible: {e}")
+            print(f"❌ Graphical interface not available: {e}")
             fallback_to_cli()
     else:
-        print("❌ Interface graphique non disponible")
+        print("❌ GUI not available")
         fallback_to_cli()
 
 def fallback_to_cli():
-    """Retourne vers l'interface ligne de commande"""
-    print("🔄 Retour à l'interface ligne de commande...")
+    """Returns to the command-line interface"""
+    print("🔄 Return to the command line interface...")
     try:
         from main import cli
         cli()
     except ImportError as e:
-        print(f"❌ Aucune interface disponible: {e}")
-        print("💡 Installation recommandée: python install.py")
+        print(f"❌ No interface available:{e}")
+        print("💡 Recommended installation: python install.py")
 
 if __name__ == "__main__":
     main()

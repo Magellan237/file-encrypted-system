@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Installateur automatique simplifié pour CryptoFile
+Simplified automatic installer for CryptoFile
 """
 
 import os
@@ -11,7 +11,7 @@ import shutil
 from pathlib import Path
 
 def print_colored(text, color):
-    """Affiche du texte coloré dans la console"""
+    """Displays colored text in the console"""
     colors = {
         'green': '\033[92m',
         'yellow': '\033[93m', 
@@ -22,18 +22,18 @@ def print_colored(text, color):
     print(f"{colors.get(color, '')}{text}{colors['reset']}")
 
 def check_python_version():
-    """Vérifie la version de Python"""
+    """Check the Python version"""
     version = sys.version_info
     print_colored(f"🐍 Python {version.major}.{version.minor}.{version.micro}", "blue")
     
     if version.major < 3 or (version.major == 3 and version.minor < 8):
-        print_colored("❌ Python 3.8 ou supérieur requis", "red")
+        print_colored("❌ Python 3.8 or higher required", "red")
         return False
     return True
 
 def install_dependencies():
-    """Installe les dépendances automatiquement"""
-    print_colored("📦 Installation des dépendances...", "blue")
+    """Installs dependencies automatically"""
+    print_colored("📦 Installing dependencies...", "blue")
     
     dependencies = [
         "cryptography>=41.0.0",
@@ -43,64 +43,58 @@ def install_dependencies():
     
     for package in dependencies:
         try:
-            print_colored(f"  Installation de {package}...", "yellow")
+            print_colored(f"  Installation of {package}...", "yellow")
             subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-            print_colored(f"  ✅ {package} installé", "green")
+            print_colored(f"  ✅ {package} installed", "green")
         except subprocess.CalledProcessError as e:
-            print_colored(f"  ❌ Échec installation de {package}: {e}", "red")
+            print_colored(f"  ❌ Installation failed {package}: {e}", "red")
             return False
     
     return True
 
 def install_gui_dependencies():
-    """Installe les dépendances optionnelles pour l'interface graphique"""
-    print_colored("🖥️  Installation de l'interface graphique...", "blue")
+    """Installs optional dependencies for the graphical interface"""
+    print_colored("🖥️  Installing the graphical interface...", "blue")
     
     gui_dependencies = []
     
-    # Vérifier si tkinter est disponible
+    # Prüfen Sie, ob tkinter verfügbar ist.
     try:
         import tkinter
-        print_colored("  ✅ tkinter déjà disponible", "green")
+        print_colored("  ✅ tkinter already available", "green")
     except ImportError:
-        print_colored("  ℹ️  tkinter non disponible - l'interface graphique sera limitée", "yellow")
+        print_colored("  ℹ️  tkinter not available - the graphical interface will be limited", "yellow")
     
-    # Installer pillow pour de meilleures images (optionnel)
+    # Installieren Sie Pillow für bessere Bilder (optional).
     try:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "pillow"])
-        print_colored("  ✅ Pillow installé pour les images", "green")
+        print_colored("  ✅ Pillow set up for the pictures", "green")
     except:
-        print_colored("  ⚠️  Pillow non installé (optionnel)", "yellow")
+        print_colored("  ⚠️  Pillow not installed (optional)", "yellow")
     
     return True
 
 def create_launch_scripts():
-    """Crée des scripts de lancement pour tous les systèmes"""
-    print_colored("🚀 Création des scripts de lancement...", "blue")
+    """Create launch scripts for all systems"""
+    print_colored("🚀 Creating the launch scripts...", "blue")
     
     current_dir = os.getcwd()
     
     # Script Windows
     if platform.system() == "Windows":
         bat_content = f'''@echo off
-chcp 65001 > nul
-echo 🔐 Lancement de CryptoFile...
-echo.
-"{sys.executable}" -c "
-import sys
-sys.path.append('{current_dir}')
-from src.gui.app import run_gui
-run_gui()
-"
+chcp 65001 
+echo 🔐 CryptoFile Launch...
+"{sys.executable}" -m src.gui.app
 pause
 '''
         with open("Lancer_CryptoFile.bat", "w", encoding="utf-8") as f:
             f.write(bat_content)
-        print_colored("  ✅ Script Windows créé: 'Lancer_CryptoFile.bat'", "green")
+        print_colored("  ✅ Windows script created: 'Lancer_CryptoFile.bat'", "green")
     
     # Script Unix/Linux/macOS
     sh_content = f'''#!/bin/bash
-echo "🔐 Lancement de CryptoFile..."
+echo "🔐 CryptoFile Launch..."
 cd "{current_dir}"
 "{sys.executable}" -c "
 import sys
@@ -115,16 +109,16 @@ run_gui()
     # Rendre le script executable sur Unix
     if platform.system() != "Windows":
         os.chmod("lancer_cryptofile.sh", 0o755)
-        print_colored("  ✅ Script Unix créé: 'lancer_cryptofile.sh'", "green")
+        print_colored("  ✅ Unix script created: 'lancer_cryptofile.sh'", "green")
 
 def create_config_files():
-    """Crée les fichiers de configuration par défaut"""
-    print_colored("⚙️  Configuration de l'application...", "blue")
+    """Creates the default configuration files"""
+    print_colored("⚙️  Application configuration...", "blue")
     
     config_dir = Path.home() / '.cryptofile'
     config_dir.mkdir(exist_ok=True)
     
-    # Configuration par défaut
+    # Standardkonfiguration
     config_content = '''{
     "auto_backup": true,
     "theme": "light",
@@ -136,63 +130,63 @@ def create_config_files():
     with open(config_file, 'w', encoding='utf-8') as f:
         f.write(config_content)
     
-    print_colored("  ✅ Configuration créée", "green")
-
-def create_example_files():
-    """Crée des fichiers d'exemple pour tester"""
-    print_colored("📝 Création de fichiers d'exemple...", "blue")
+    print_colored("  ✅ Configuration created", "green")
+"""
+# def create_example_files():
+#    Create sample files for testing
+    print_colored("📝 Creating sample files...", "blue")
     
     examples_dir = Path("exemples")
     examples_dir.mkdir(exist_ok=True)
     
     # Fichier texte d'exemple
     with open(examples_dir / "test_secret.txt", "w", encoding="utf-8") as f:
-        f.write("Ceci est un fichier secret de test ! 🔐\n")
-        f.write("Vous pouvez le chiffrer pour vous entraîner.\n")
+        f.write("This is a secret test file! 🔐\n")
+        f.write("You can encrypt it to practice..\n")
     
     # Guide rapide
-    guide_content = '''# 🎯 Guide Rapide CryptoFile
+    guide_content = '''# 🎯 CryptoFile Quick Guide
 
 ## Pour chiffrer un fichier :
-1. Lancez CryptoFile
-2. Cliquez sur "Parcourir"
-3. Sélectionnez un fichier
-4. Entrez un mot de passe
-5. Cliquez sur "🔒 Chiffrer"
+1. Launch CryptoFile
+2. Click "Browse"
+3. Select a file
+4. Enter a password
+5. Click "Encrypt"
 
-## Pour déchiffrer :
-1. Sélectionnez un fichier .encrypted
-2. Entrez le mot de passe
-3. Cliquez sur "🔓 Déchiffrer"
+## To decrypt:
+1. Select an .encrypted file
+2. Enter the password
+3. Click on "🔓 Decrypt"
 
-## 💡 Conseil :
-Utilisez le fichier "test_secret.txt" pour vous entraîner !
+## 💡 Tip:
+Use the "test_secret.txt" file to practice!
 '''
     with open(examples_dir / "LISEZ_MOI.txt", "w", encoding="utf-8") as f:
         f.write(guide_content)
     
-    print_colored("  ✅ Fichiers d'exemple créés dans 'exemples/'", "green")
+    print_colored("  ✅ Example files created in 'examples/'", "green")
 
 def test_installation():
-    """Teste que l'installation fonctionne"""
-    print_colored("🧪 Test de l'installation...", "blue")
+    #Testen Sie, ob die Installation funktioniert
+    print_colored("🧪 Testen der Installation...", "blue")
     
     try:
-        # Test des imports
+        # Importe testen
         import cryptography
         import argon2
         import rich
         
-        print_colored("  ✅ Dépendances principales importées", "green")
+        print_colored("  ✅ Wichtigste importierte Abhängigkeiten", "green")
         
-        # Test de notre code
+        # Testen unseres Codes
         sys.path.append('.')
         from src.core.crypto_manager import CryptoManager
         
         crypto_manager = CryptoManager()
-        print_colored("  ✅ CryptoFile importé avec succès", "green")
+        print_colored("  ✅ CryptoFile erfolgreich importiert", "green")
         
-        # Test de chiffrement simple
+        # Einfacher Verschlüsselungstest
         test_content = b"Test de chiffrement"
         test_file = "test_install.txt"
         encrypted_file = test_file + ".encrypted"
@@ -201,100 +195,97 @@ def test_installation():
         with open(test_file, 'wb') as f:
             f.write(test_content)
         
-        # Chiffrement
+        # Verschlüsselung
         success = crypto_manager.encrypt_file_v2(test_file, encrypted_file, "test_password")
         
         if success and os.path.exists(encrypted_file):
-            # Déchiffrement
+            # Entschlüsselung
             success = crypto_manager.decrypt_file_v2(encrypted_file, decrypted_file, "test_password")
             
             if success and os.path.exists(decrypted_file):
                 with open(decrypted_file, 'rb') as f:
                     if f.read() == test_content:
-                        print_colored("  ✅ Test de chiffrement/déchiffrement réussi!", "green")
+                        print_colored("  ✅ Verschlüsselungs-/Entschlüsselungstest erfolgreich!", "green")
                     else:
-                        print_colored("  ⚠️  Test de chiffrement: données corrompues", "yellow")
+                        print_colored("  ⚠️  Verschlüsselungstest: Daten beschädigt", "yellow")
             else:
-                print_colored("  ⚠️  Échec du déchiffrement de test", "yellow")
+                print_colored("  ⚠️  Testentschlüsselung fehlgeschlagen", "yellow")
         else:
-            print_colored("  ⚠️  Échec du chiffrement de test", "yellow")
+            print_colored("  ⚠️  Die Testverschlüsselung ist fehlgeschlagen", "yellow")
         
-        # Nettoyage
+        # Reinigung
         for f in [test_file, encrypted_file, decrypted_file]:
             if os.path.exists(f):
                 os.remove(f)
                 
     except Exception as e:
-        print_colored(f"  ⚠️  Test d'installation: {e}", "yellow")
-
+        print_colored(f"  Installationstest: {e}", "yellow")
+"""
 def show_final_instructions():
-    """Affiche les instructions finales"""
-    print_colored("\n🎉 Installation terminée avec succès!", "green")
+    """Zeigt die endgültigen Anweisungen an"""
+    print_colored("\n Die Installation wurde erfolgreich abgeschlossen!", "green")
     print_colored("=" * 50, "blue")
     
     system = platform.system()
     
     if system == "Windows":
-        print_colored("🚀 Pour lancer CryptoFile :", "yellow")
-        print_colored("   Double-cliquez sur 'Lancer_CryptoFile.bat'", "green")
-        print_colored("   OU", "blue")
-        print_colored("   Exécutez: python CryptoFile.py", "green")
+        print_colored("   Um CryptoFile zu starten :", "yellow")
+        print_colored("   Doppelklicken Sie auf 'Lancer_CryptoFile.bat'", "green")
+        print_colored("   ODER", "blue")
+        print_colored("   Tippen: python CryptoFile.py oder py CryptoFile.py", "green")
     
     elif system == "Darwin":
-        print_colored("🚀 Pour lancer CryptoFile :", "yellow") 
-        print_colored("   Double-cliquez sur 'lancer_cryptofile.sh'", "green")
-        print_colored("   OU", "blue")
-        print_colored("   Exécutez: ./lancer_cryptofile.sh", "green")
+        print_colored("   Um CryptoFile zu starten :", "yellow") 
+        print_colored("   Doppelklicken Sie auf 'lancer_cryptofile.sh'", "green")
+        print_colored("   ODER", "blue")
+        print_colored("   Tippen: ./lancer_cryptofile.sh", "green")
     
     else:  # Linux/Unix
-        print_colored("🚀 Pour lancer CryptoFile :", "yellow")
-        print_colored("   Exécutez: ./lancer_cryptofile.sh", "green")
-        print_colored("   OU", "blue") 
-        print_colored("   Exécutez: python CryptoFile.py", "green")
+        print_colored("   Um CryptoFile zu starten  :", "yellow")
+        print_colored("   Tippen : ./lancer_cryptofile.sh", "green")
+        print_colored("   ODER", "blue") 
+        print_colored("   Tippen: python CryptoFile.py", "green")
     
-    print_colored("\n📚 Pour vous entraîner :", "yellow")
-    print_colored("   Des fichiers d'exemple sont dans le dossier 'exemples/'", "green")
-    
-    print_colored("\n🆘 En cas de problème :", "yellow")
-    print_colored("   Réexécutez ce script: python install.py", "green")
-    print_colored("   Ou consultez le fichier: GUIDE.md", "green")
+    print_colored("\n Im Problemfall :", "yellow")
+    print_colored("   Führen Sie dieses Skript erneut aus.: python install.py oder py install.py", "green")
+    print_colored("   Oder schauen Sie sich die Datei an: GUIDE.md", "green")
 
 def main():
-    """Fonction principale d'installation"""
-    print_colored("🔐 Installation de CryptoFile", "blue")
+    """Hauptinstallationsfunktion"""
+    print_colored("🔐 CryptoFile installieren", "blue")
     print_colored("=" * 50, "blue")
     
-    # Vérifications de base
+    # Grundlegende Kontrollen
     if not check_python_version():
         return
     
-    # Installation des dépendances
+    # Abhängigkeiten installieren
     if not install_dependencies():
-        print_colored("❌ Échec de l'installation des dépendances", "red")
+        print_colored("❌ Installation der Abhängigkeiten fehlgeschlagen", "red")
         return
     
-    # Dépendances GUI optionnelles
+    # Optionale GUI-Abhängigkeiten
     install_gui_dependencies()
     
-    # Création des scripts
+    # Erstellung von Skripten
     create_launch_scripts()
     
-    # Configuration
+    # Konfiguration
     create_config_files()
     
-    # Fichiers d'exemple
-    create_example_files()
+    # Beispieldateien
+    #create_example_files()
     
-    # Test final
-    test_installation()
+    # Abschlusstest
+    #test_installation()
     
-    # Instructions
+    # Anweisungen   
     show_final_instructions()
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print_colored("\n❌ Installation annulée par l'utilisateur", "red")
+        print_colored("\n❌ Installation vom Benutzer abgebrochen", "red")
     except Exception as e:
-        print_colored(f"\n💥 Erreur during installation: {e}", "red")
+        print_colored(f"\n💥 Fehler bei der Installation: {e}", "red")
